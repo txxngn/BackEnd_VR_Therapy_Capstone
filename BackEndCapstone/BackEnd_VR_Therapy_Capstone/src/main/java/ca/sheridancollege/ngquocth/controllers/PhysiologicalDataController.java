@@ -18,6 +18,7 @@ import ca.sheridancollege.ngquocth.beans.PatientProfile;
 import ca.sheridancollege.ngquocth.beans.PhysiologicalData;
 import ca.sheridancollege.ngquocth.repositories.PatientProfileRepository;
 import ca.sheridancollege.ngquocth.repositories.PhysiologicalDataRepository;
+import ca.sheridancollege.ngquocth.services.ProgressTrackerService;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -28,6 +29,7 @@ public class PhysiologicalDataController {
 	private final PhysiologicalDataRepository physioRepo;
     private final PatientProfileRepository patientRepo;
     
+    private final ProgressTrackerService trackerService;
 
 
 //PATIENT - can only VIEW their record    
@@ -61,8 +63,12 @@ public class PhysiologicalDataController {
 
         data.setId(null);
         data.setPatient(patient);
+        PhysiologicalData saved = physioRepo.save(data);
         
-        return ResponseEntity.ok(physioRepo.save(data));
+        trackerService.updateTrackerScore(patient.getEmail());
+        
+        
+        return ResponseEntity.ok(saved);
     }
     
     
@@ -81,7 +87,12 @@ public class PhysiologicalDataController {
         existing.setNotes(newData.getNotes());
         existing.setTimestamp(newData.getTimestamp());
 
-        return ResponseEntity.ok(physioRepo.save(existing));
+        PhysiologicalData updated = physioRepo.save(existing);
+        
+        trackerService.updateTrackerScore(existing.getPatient().getEmail());
+        
+        
+        return ResponseEntity.ok(updated);
     }
     
     

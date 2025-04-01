@@ -33,6 +33,12 @@ public class Session {
     private String scenarioUsed;
     private String feedback;
     
+    //reminder flags
+    @Builder.Default
+    private boolean isReminderSent1Hour = false;
+    
+    @Builder.Default
+    private boolean isReminderSent24Hour = false;
     
     
     
@@ -53,6 +59,11 @@ public class Session {
     private ProgressTracker progressTracker;
     
     
+    //for progress tracker score
+    public int getFeedbackLength() {
+        return feedback != null ? feedback.trim().length() : 0;
+    }
+
     
  // Implemented getters because @JsonIgnore hides therapist and patient data to avoid infinite loop
     public String getTherapistName() {
@@ -72,5 +83,7 @@ public class Session {
     }
     
     
+    
+
     
 }

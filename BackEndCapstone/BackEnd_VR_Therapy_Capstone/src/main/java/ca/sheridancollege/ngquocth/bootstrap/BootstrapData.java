@@ -11,7 +11,6 @@ import ca.sheridancollege.ngquocth.beans.Customization;
 import ca.sheridancollege.ngquocth.beans.PatientProfile;
 import ca.sheridancollege.ngquocth.beans.PhysiologicalData;
 import ca.sheridancollege.ngquocth.beans.ProgressTracker;
-import ca.sheridancollege.ngquocth.beans.Role;
 import ca.sheridancollege.ngquocth.beans.Scenario;
 import ca.sheridancollege.ngquocth.beans.Session;
 import ca.sheridancollege.ngquocth.beans.TherapistProfile;
@@ -22,6 +21,7 @@ import ca.sheridancollege.ngquocth.repositories.ProgressTrackerRepository;
 import ca.sheridancollege.ngquocth.repositories.ScenarioRepository;
 import ca.sheridancollege.ngquocth.repositories.SessionRepository;
 import ca.sheridancollege.ngquocth.repositories.TherapistProfileRepository;
+import ca.sheridancollege.ngquocth.services.ProgressTrackerService;
 import lombok.AllArgsConstructor;
 
 @Component
@@ -33,7 +33,10 @@ public class BootstrapData implements CommandLineRunner {
     private ScenarioRepository scenarioRepo;
     private CustomizationRepository customizationRepo;
     private SessionRepository sessionRepo;
+    
     private ProgressTrackerRepository progressTrackerRepo;
+    private final ProgressTrackerService trackerService;
+
     private PhysiologicalDataRepository physiologicalDataRepo;
     
     private final PasswordEncoder passwordEncoder; //for login test cuz spring security expect BCrypt-encoded passwords, not raw password
@@ -111,83 +114,68 @@ public class BootstrapData implements CommandLineRunner {
         scenarioRepo.saveAll(Arrays.asList(scenario1, scenario2));
 
         // === 4. Create Customizations ===
-        Customization customization1 = Customization.builder()
-                .therapist(therapist1)
-                .scenario(scenario1)
-                .changesDescription("Increased ocean wave sounds.")
-                .build();
+        customizationRepo.saveAll(Arrays.asList(
+                Customization.builder().therapist(therapist1).scenario(scenario1).changesDescription("Increased ocean wave sounds.").build(),
+                Customization.builder().therapist(therapist2).scenario(scenario2).changesDescription("Added birds chirping sounds.").build()
+            ));
 
-        Customization customization2 = Customization.builder()
-                .therapist(therapist2)
-                .scenario(scenario2)
-                .changesDescription("Added birds chirping sounds.")
-                .build();
 
-        customizationRepo.saveAll(Arrays.asList(customization1, customization2));
-
+        
         // === 5. Create Progress Trackers ===
-        ProgressTracker tracker1 = ProgressTracker.builder()
-                .patient(patient1)
-                .improvementScore(2.5)
-                .build();
+        ProgressTracker tracker1 = ProgressTracker.builder().patient(patient1).improvementScore(0.0).build();
+        progressTrackerRepo.save(tracker1);
+        patient1.setProgressTracker(tracker1);
 
-        ProgressTracker tracker2 = ProgressTracker.builder()
-                .patient(patient2)
-                .improvementScore(3.0)
-                .build();
-
-        progressTrackerRepo.saveAll(Arrays.asList(tracker1, tracker2));
-
+        ProgressTracker tracker2 = ProgressTracker.builder().patient(patient2).improvementScore(0.0).build();
+        progressTrackerRepo.save(tracker2);
+        patient2.setProgressTracker(tracker2);
+        patientRepo.saveAll(Arrays.asList(patient1, patient2));
+        
+              
+        
+        
         // === 6. Create Sessions ===
-        Session session1 = Session.builder()
-                .therapist(therapist1)
-                .patient(patient1)
-                .sessionDate(LocalDateTime.now().minusDays(5))
-                .sessionDuration(60)
-                .scenarioUsed(scenario1.getName())
-                .feedback("Very calming experience.")
-                .progressTracker(tracker1)
-                .build();
+        sessionRepo.saveAll(Arrays.asList(
+        		Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(10)).sessionDuration(60).scenarioUsed("Calm Beach").feedback("It was helpful. I practiced deep breathing.").progressTracker(tracker1).build(),
+                Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(5)).sessionDuration(50).scenarioUsed("Calm Beach").feedback("Today I felt a big shift. My anxiety reduced drastically. I’m more confident. I practiced visualization.").progressTracker(tracker1).build(),
+                Session.builder().therapist(therapist1).patient(patient1).sessionDate(LocalDateTime.now().minusDays(1)).sessionDuration(55).scenarioUsed("Calm Beach").feedback("One of the most effective sessions so far. Long guided breathing with detailed exposure techniques.").progressTracker(tracker1).build(),
 
-        Session session2 = Session.builder()
-                .therapist(therapist2)
-                .patient(patient2)
-                .sessionDate(LocalDateTime.now().minusDays(3))
-                .sessionDuration(45)
-                .scenarioUsed(scenario2.getName())
-                .feedback("Felt very relaxed afterwards.")
-                .progressTracker(tracker2)
-                .build();
-
-        sessionRepo.saveAll(Arrays.asList(session1, session2));
+                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now().minusDays(3)).sessionDuration(45).scenarioUsed("Quiet Forest").feedback("Very relaxing. I felt peaceful and my anxiety reduced.").progressTracker(tracker2).build(),
+                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now().minusDays(1)).sessionDuration(50).scenarioUsed("Quiet Forest").feedback("It helped a little. I was slightly more calm after the session.").progressTracker(tracker2).build(),
+                Session.builder().therapist(therapist2).patient(patient2).sessionDate(LocalDateTime.now()).sessionDuration(48).scenarioUsed("Quiet Forest").feedback("This session was decent. Not as strong an impact, but still valuable.").progressTracker(tracker2).build()
+            ));
+        
+        
 
         // === 7. Create Physiological Data ===
-        PhysiologicalData data1 = PhysiologicalData.builder()
-                .patient(patient1)
-                .heartRate(72.0)
-                .anxietyScore(5.5)
-                .respirationRate(16.0)
-                .bloodPressure("120/80")
-                .notes("Patient showed mild signs of anxiety.")
-                .timestamp(LocalDateTime.now().minusDays(5))
-                .build();
+        physiologicalDataRepo.saveAll(Arrays.asList(
+                PhysiologicalData.builder().patient(patient1).heartRate(75.0).anxietyScore(6.5).respirationRate(18.0).bloodPressure("130/85").notes("Initial assessment").timestamp(LocalDateTime.now().minusDays(10)).build(),
+                PhysiologicalData.builder().patient(patient1).heartRate(62.0).anxietyScore(3.0).respirationRate(14.0).bloodPressure("115/75").notes("Mid treatment").timestamp(LocalDateTime.now().minusDays(5)).build(),
+                PhysiologicalData.builder().patient(patient1).heartRate(60.0).anxietyScore(3.0).respirationRate(13.0).bloodPressure("110/70").notes("Latest improvement").timestamp(LocalDateTime.now()).build(),
 
-        PhysiologicalData data2 = PhysiologicalData.builder()
-                .patient(patient2)
-                .heartRate(78.0)
-                .anxietyScore(4.8)
-                .respirationRate(18.0)
-                .bloodPressure("118/76")
-                .notes("Patient appeared relaxed. No signs of stress.")
-                .timestamp(LocalDateTime.now().minusDays(3))
-                .build();
-
-        physiologicalDataRepo.saveAll(Arrays.asList(data1, data2));
+                PhysiologicalData.builder().patient(patient2).heartRate(80.0).anxietyScore(5.0).respirationRate(18.0).bloodPressure("125/82").notes("Baseline reading").timestamp(LocalDateTime.now().minusDays(5)).build(),
+                PhysiologicalData.builder().patient(patient2).heartRate(75.0).anxietyScore(4.5).respirationRate(16.0).bloodPressure("120/78").notes("Slight progress").timestamp(LocalDateTime.now()).build()
+            ));
 	
+        
+        
+        
+
+        
+        
+        //Trigger score calculation
+        trackerService.updateTrackerScore(patient1.getEmail());
+        trackerService.updateTrackerScore(patient2.getEmail());
+        
+        
+        
+        
+        
+        
+        
+        
+        
     }
     
-    
-    
-    
-    
+ 
 }

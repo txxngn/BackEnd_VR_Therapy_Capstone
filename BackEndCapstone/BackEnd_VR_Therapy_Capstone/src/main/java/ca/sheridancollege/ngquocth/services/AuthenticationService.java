@@ -9,11 +9,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import ca.sheridancollege.ngquocth.beans.PatientProfile;
+import ca.sheridancollege.ngquocth.beans.ProgressTracker;
 import ca.sheridancollege.ngquocth.beans.Role;
 import ca.sheridancollege.ngquocth.beans.TherapistProfile;
 import ca.sheridancollege.ngquocth.beans.User;
 import ca.sheridancollege.ngquocth.models.AuthenticationRequest;
 import ca.sheridancollege.ngquocth.models.AuthenticationResponse;
+import ca.sheridancollege.ngquocth.repositories.PatientProfileRepository;
+import ca.sheridancollege.ngquocth.repositories.ProgressTrackerRepository;
 import ca.sheridancollege.ngquocth.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 
@@ -28,6 +31,9 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
+    
+    private final ProgressTrackerRepository progressTrackerRepo;
+    private final PatientProfileRepository patientRepo;
 
     //register a new user
     public AuthenticationResponse register(User user) {
@@ -42,8 +48,23 @@ public class AuthenticationService {
     	
     	
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        String jwtToken = jwtService.generateToken(user);
+        User savedUser = userRepository.save(user);
+
+        //Create tracker if this is a patient
+        if (savedUser instanceof PatientProfile) {
+            PatientProfile patient = (PatientProfile) savedUser;
+
+            ProgressTracker tracker = ProgressTracker.builder()
+                .patient(patient)
+                .improvementScore(0.0)
+                .build();
+
+            progressTrackerRepo.save(tracker);
+            patient.setProgressTracker(tracker);
+            patientRepo.save(patient);
+        }
+
+        String jwtToken = jwtService.generateToken(savedUser);
         return new AuthenticationResponse(jwtToken);
     }
 

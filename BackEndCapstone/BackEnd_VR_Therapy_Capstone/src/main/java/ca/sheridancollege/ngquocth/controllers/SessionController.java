@@ -23,6 +23,7 @@ import ca.sheridancollege.ngquocth.models.SessionBookingRequest;
 import ca.sheridancollege.ngquocth.repositories.PatientProfileRepository;
 import ca.sheridancollege.ngquocth.repositories.SessionRepository;
 import ca.sheridancollege.ngquocth.repositories.TherapistProfileRepository;
+import ca.sheridancollege.ngquocth.services.ProgressTrackerService;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -34,6 +35,8 @@ public class SessionController {
 	private final SessionRepository sessionRepo;
 	private final PatientProfileRepository patientRepo;
     private final TherapistProfileRepository therapistRepo;
+
+    private final ProgressTrackerService trackerService;
 
     
 //For Patient    
@@ -57,6 +60,11 @@ public class SessionController {
         session.setSessionId(null);
         
         Session savedSession = sessionRepo.save(session);
+        
+        //Auto calculate progress
+        trackerService.updateTrackerScore(patient.getEmail());
+        
+        
         return ResponseEntity.ok(savedSession);
     }
 
@@ -97,6 +105,9 @@ public class SessionController {
         existingSession.setFeedback(updatedSession.getFeedback());
 
         sessionRepo.save(existingSession);
+        
+        trackerService.updateTrackerScore(patient.getEmail());
+        
         return ResponseEntity.ok(existingSession);
     }
     
@@ -154,6 +165,8 @@ public class SessionController {
 
         sessionRepo.save(session);
         
+        trackerService.updateTrackerScore(patient.getEmail());
+        
         return ResponseEntity.ok(session);
     }
 
@@ -196,6 +209,10 @@ public class SessionController {
         session.setFeedback(sessionRequest.getFeedback());
 
         sessionRepo.save(session);
+        
+        trackerService.updateTrackerScore(session.getPatient().getEmail());
+        
+        
         return ResponseEntity.ok(session);
     }
     

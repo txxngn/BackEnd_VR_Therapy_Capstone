@@ -40,6 +40,6 @@ public class PhysiologicalData {
     private PatientProfile patient;
     
 
-    
+
     
 }

@@ -2,6 +2,8 @@ package ca.sheridancollege.ngquocth.beans;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,13 +37,17 @@ public class ProgressTracker {
     
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
+    @JsonIgnore
     private PatientProfile patient;
     
     
     @OneToMany(mappedBy = "progressTracker", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Session> sessions;
     
 
     
     
+
+
 }
